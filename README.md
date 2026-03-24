@@ -23,7 +23,8 @@ There is no separate API layer. The server renders HTML fragments and pushes the
 - [Rust](https://rustup.rs/) (for Tauri)
 - [Tauri CLI](https://v2.tauri.app/start/prerequisites/) — `cargo install tauri-cli`
 - For Android: [Android Studio](https://developer.android.com/studio) with SDK and NDK installed
-- For Android dev: [ngrok](https://ngrok.com/) (free account required — see [why ngrok?](#why-ngrok-for-android-development))
+- For iOS: macOS with [Xcode](https://developer.apple.com/xcode/) installed
+- For mobile dev: [ngrok](https://ngrok.com/) (free account required — see [why ngrok?](#why-ngrok-for-android-development))
 
 ## Getting Started
 
@@ -114,14 +115,6 @@ Datastar sends reactive signals as JSON in POST bodies, so this breaks all form 
 
 **This is a dev-only problem.** In production, the Tauri app points to your real HTTPS server — POST bodies work natively. ngrok simulates this production topology during development.
 
-**Alternatives considered:**
-- **Caddy reverse proxy** with self-signed certs — works but requires installing the CA certificate on the Android emulator, which adds friction
-- **HTTP to LAN IP** (`http://192.168.x.x:3000`) — Android blocks cleartext in release builds, and some WebView configurations still interfere
-- **Tauri HTTP plugin** — uses Rust-side requests instead of WebView fetch, but Datastar uses standard `fetch` internally so this doesn't help
-- **Header workaround** — monkey-patch `fetch` to copy the body into a custom header, server reads from header as fallback. Works but is a hack.
-
-ngrok is the simplest: one command, trusted HTTPS cert, zero emulator configuration.
-
 ### Useful commands
 
 ```bash
@@ -139,14 +132,116 @@ cd src-tauri/gen/android && ./gradlew --stop
 # Ctrl+C in the ngrok terminal
 ```
 
+## iOS Development
+
+### Prerequisites
+
+- macOS with Xcode installed
+- Xcode Command Line Tools: `xcode-select --install`
+- iOS Rust targets: `rustup target add aarch64-apple-ios aarch64-apple-ios-sim`
+
+### Initial setup
+
+```bash
+# Initialize iOS support
+cargo tauri ios init
+```
+
+### Running on iOS
+
+iOS development requires **three terminals** (same as Android):
+
+**Terminal 1** — Clojure server:
+```bash
+clj -M:dev
+```
+
+**Terminal 2** — ngrok tunnel:
+```bash
+ngrok http 3000
+```
+
+Copy the HTTPS URL and update `src-tauri/tauri.ios.conf.json`:
+```json
+{
+  "build": {
+    "devUrl": "https://your-ngrok-url.ngrok-free.dev"
+  }
+}
+```
+
+**Terminal 3** — Run on device or simulator:
+```bash
+# Run on simulator
+cargo tauri ios dev
+
+# Run on physical device
+cargo tauri ios dev --device
+```
+
+### Code signing (physical device)
+
+For physical devices, open the Xcode project to configure signing:
+
+```bash
+open src-tauri/gen/apple/app.xcodeproj
+```
+
+In Xcode:
+1. Select **app_iOS** target
+2. Go to **Signing & Capabilities**
+3. Enable **Automatically manage signing**
+4. Select your **Team** (Apple ID)
+
+On first run, trust the developer on your iPhone:
+- Settings → General → VPN & Device Management → tap your profile → Trust
+
+### Troubleshooting
+
+See [docs/troubleshooting-ios.md](docs/troubleshooting-ios.md) for common issues:
+- Cargo not found in Xcode
+- Code signing errors
+- Viewport height issues
+- Production build "asset not found"
+
+### Building release app (wireless testing)
+
+To install an app that runs without Mac connection:
+
+```bash
+# Build the release app
+cargo tauri ios build
+
+# Install ios-deploy (first time only)
+brew install ios-deploy
+
+# Install to connected device
+ios-deploy --bundle src-tauri/gen/apple/build/arm64/PocketLedger.app
+```
+
+The release app loads `src-tauri/dist/index.html` which redirects to your server URL.
+
+**To change the server URL**, edit `src-tauri/dist/index.html`:
+
+```html
+<script>
+  window.location.href = 'https://your-server-url.com';
+</script>
+```
+
+**Note:** With a free Apple Developer account, apps expire after 7 days.
+
 ## Production Deployment
 
-In production, the architecture simplifies:
+Since this is a server-rendered app, Tauri bundles a minimal `index.html` that redirects to your production server:
 
 ```
-Tauri APK (bundled HTML/CSS/JS) → HTTPS → Production Clojure Server
+src-tauri/dist/index.html → redirect → https://your-production-server.com
 ```
 
-No ngrok, no tunnels, no workarounds. The Tauri app ships with your static assets and points `devUrl` (or the production equivalent) at your HTTPS server. POST bodies work because requests go over the real network.
+The Clojure server must be accessible over HTTPS. For production:
+1. Deploy your Clojure server (VPS, cloud, etc.)
+2. Update `src-tauri/dist/index.html` with the production URL
+3. Build release: `cargo tauri ios build` / `cargo tauri android build`
 
 For fully offline/local apps: bundle a [GraalVM native-image](https://www.graalvm.org/native-image/) Clojure server as a Tauri sidecar — the server runs on the device itself.

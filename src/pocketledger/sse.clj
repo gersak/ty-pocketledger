@@ -51,3 +51,12 @@
                   (if (string? body) body (slurp body))))]
     (when (and raw (not (str/blank? raw)))
       (json/read-str raw :key-fn keyword))))
+
+(defn redirect
+  "Create a redirect SSE event by appending a script to body.
+   Uses setTimeout for Firefox compatibility."
+  [url]
+  (sse-event "datastar-patch-elements"
+             ["selector body"
+              "mode append"
+              (str "elements <script>setTimeout(() => window.location.href = '" url "')</script>")]))

@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "identifier": "dev.gersak.pocketledger",
   "build": {
-    "devUrl": "http://localhost:3000"
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "./dist"
   },
   "app": {
     "windows": [

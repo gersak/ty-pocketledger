@@ -1,8 +1,8 @@
 (ns pocketledger.handlers
-  (:require [pocketledger.db :as db]
+  (:require [clojure.string :as str]
+            [pocketledger.db :as db]
             [pocketledger.sse :as sse]
-            [pocketledger.views :as views]
-            [clojure.string :as str]))
+            [pocketledger.views :as views]))
 
 (defn- parse-date
   "Extract YYYY-MM-DD from a UTC ISO string or date string."
@@ -27,10 +27,8 @@
         (db/set-setting! "currency" setupCurrency)
         (db/set-setting! "monthly_budget" setupBudget)
         (db/set-setting! "setup_complete" "true")
-        ;; Redirect to app via Datastar
-        (sse/sse-response
-          (sse/sse-event "datastar-execute-script"
-                         ["script window.location.href = '/';"]))))))
+        ;; Redirect to app
+        (sse/sse-response (sse/redirect "/"))))))
 
 ;; ---------------------------------------------------------------------------
 ;; Dashboard
@@ -71,7 +69,10 @@
              [:p.ty-text-success+.text-sm "Transaction added!"]])
           (sse/patch-elements (views/summary-fragment))
           (sse/patch-elements (views/transaction-list-fragment))
-          (sse/patch-signals {:txDesc "" :txAmount "" :txCategory "" :txDate ""}))))))
+          (sse/patch-signals {:txDesc ""
+                              :txAmount ""
+                              :txCategory ""
+                              :txDate ""}))))))
 
 (defn delete-transaction [request]
   (let [id (some-> (get-in request [:params :id]) parse-long)]
@@ -97,6 +98,4 @@
 
 (defn reset-data [_request]
   (db/reset-all!)
-  (sse/sse-response
-    (sse/sse-event "datastar-execute-script"
-                   ["script window.location.href = '/';"])))
+  (sse/sse-response (sse/redirect "/")))
