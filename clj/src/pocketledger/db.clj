@@ -2,7 +2,7 @@
   (:require [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]))
 
-(def db-spec {:dbtype "sqlite" :dbname "pocketledger.db"})
+(def db-spec {:dbtype "sqlite" :dbname "../pocketledger.db"})
 
 (defonce ds (jdbc/get-datasource db-spec))
 

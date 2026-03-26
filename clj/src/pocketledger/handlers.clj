@@ -72,7 +72,7 @@
           (sse/patch-signals {:txDesc ""
                               :txAmount ""
                               :txCategory ""
-                              :txDate ""}))))))
+                              :txDate ""})))))))
 
 (defn delete-transaction [request]
   (let [id (some-> (get-in request [:params :id]) parse-long)]

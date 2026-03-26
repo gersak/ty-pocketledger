@@ -3,6 +3,10 @@
 .nrepl-port
 classes/
 
+# TypeScript / Node
+node_modules/
+dist/
+
 # Database
 *.db
 

@@ -16,9 +16,9 @@
                  :content "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"}]
          [:title "PocketLedger"]
          [:link {:rel "stylesheet"
-                 :href "https://cdn.jsdelivr.net/npm/@gersak/ty@1.0.0-rc.1/css/ty.css"}]
+                 :href "https://cdn.jsdelivr.net/npm/@gersak/ty@1.0.0-TC2/css/ty.css"}]
          [:script {:type "module"
-                   :src "https://cdn.jsdelivr.net/npm/@gersak/ty@1.0.0-rc.1/dist/ty.js"}]
+                   :src "https://cdn.jsdelivr.net/npm/@gersak/ty@1.0.0-TC2/dist/ty.js"}]
          [:script {:type "module"
                    :src "https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.0-RC.8/bundles/datastar.js"}]
          [:script {:src "https://cdn.tailwindcss.com"}]
@@ -44,9 +44,7 @@
           [:div.flex.items-center.gap-2
            [:ty-icon {:name "wallet"
                       :size "md"}]
-           [:h1.text-xl.font-bold.ty-text++ "PocketLedger"]
-           [:a {:href "/test"
-                :class "text-xs underline ty-text-"} "dbg"]]
+           [:h1.text-xl.font-bold.ty-text++ "PocketLedger"]]
           [:div.flex.items-center.gap-2
            [:ty-button {:size "sm"
                         :plain true
@@ -61,9 +59,7 @@
         footer
         [:footer.ty-content.border-t.ty-border
          [:div.mx-auto.max-w-3xl.px-4.py-4.ty-text-.text-sm.text-center
-          "Built with Ty, Datastar & Clojure"
-          " — " [:a {:href "/test"
-                     :class "underline"} "debug"]]]
+          "Built with Ty, Datastar & Clojure"]]]
 
         theme-init
         [:script
@@ -78,13 +74,10 @@
              function setAppHeight() {
                var container = document.querySelector('.app-container');
                if (container) {
-                 var h = window.innerHeight;
-                 // On iOS Tauri, window.innerHeight is incorrect - use screen.height
-                 // Detect mobile Tauri: has __TAURI__ and is touch device
-                 var isTauriMobile = window.__TAURI__ && ('ontouchstart' in window);
-                 if (isTauriMobile && screen.height > h) {
-                   h = screen.height;
-                 }
+                 // Detect mobile by screen width (phones are < 500px wide typically)
+                 var isMobile = screen.width < 500;
+                 // On mobile iOS, window.innerHeight is wrong - use screen.height
+                 var h = (isMobile && screen.height > window.innerHeight) ? screen.height : window.innerHeight;
                  container.style.height = h + 'px';
                }
              }
@@ -142,8 +135,8 @@
    :headers {"Content-Type" "text/html"}
    :body
    (layout
-     [:div.app-body.flex.items-center.justify-center
-      [:div.max-w-md.mx-auto.space-y-8.py-8
+     [:div.app-body
+      [:div.max-w-md.mx-auto.space-y-8.py-8.my-auto
        [:div.text-center.space-y-2
         [:h2.text-2xl.font-bold.ty-text++ "Welcome to PocketLedger"]
         [:p.ty-text- "Let's set up your expense tracker"]]
@@ -183,7 +176,7 @@
         [:div.pt-2
          [:ty-button
           {:flavor "primary"
-           :class "w-full"
+           :wide "true"
            "data-on:click" "@post('/api/setup')"}
           "Start tracking"]]
 
@@ -274,7 +267,7 @@
 
 (defn transaction-list-fragment []
   (let [txns (db/get-transactions {:limit 20})]
-    [:div#transaction-list.space-y-2
+    [:div#transaction-list.space-y-2.pb-4
      (if (empty? txns)
        [:div.text-center.py-8
         [:p.ty-text-.italic "No transactions yet. Add one above!"]]
@@ -302,7 +295,8 @@
          [:p.ty-text- "Here's your spending overview"]]
 
         ;; Tabs — height set dynamically by ResizeObserver below
-        [:ty-tabs#app-tabs {:active "dashboard"}
+        [:ty-tabs#app-tabs {:active "dashboard"
+                          :class "ty-content rounded-lg"}
 
          ;; Rich labels with icons
          (for [[id label icon] [["dashboard" "Dashboard" "layout-dashboard"]
@@ -317,7 +311,7 @@
          ;; Dashboard tab
          [:ty-tab {:id "dashboard"
                    :label "Dashboard"}
-          [:div.p-4
+          [:div.px-4.pt-4
           ;; Summary cards — always visible
            (summary-fragment)
           ;; Transactions — scrollable via ty-scroll-container
@@ -364,7 +358,8 @@
                :currency currency
                :placeholder "0.00"}]
              [:ty-date-picker
-              {"data-bind" "txDate"
+              {"data-attr:value" "$txDate"
+               "data-on:change" "$txDate = evt.detail.value || ''"
                :label "Date"
                :placeholder "Pick a date"}]]
 
@@ -382,7 +377,7 @@
 
             [:ty-button
              {:flavor "primary"
-              :class "w-full"
+              :wide "true"
               "data-on:click" "@post('/api/transactions/add')"}
              [:ty-icon {:slot "start"
                         :name "plus"
