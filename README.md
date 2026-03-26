@@ -18,7 +18,7 @@ There is no separate API layer. The server renders HTML fragments and pushes the
 
 ## Demo
 
-https://github.com/user-attachments/assets/38647248-0668-4391-b008-839bbf704905
+<video src="https://github.com/user-attachments/assets/38647248-0668-4391-b008-839bbf704905" autoplay loop muted playsinline></video>
 
 ## Getting Started
 
