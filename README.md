@@ -9,9 +9,9 @@ Server (Clojure or TypeScript) → HTML + SSE → Datastar (reactivity) → Ty (
 ```
 
 - **Clojure** or **TypeScript** handles all business logic, routing, and HTML rendering
-- **Datastar** provides client-side reactivity via SSE — no client-side framework needed
-- **Ty** web components (`@gersak/ty`) provide the UI layer — framework-agnostic, works everywhere
-- **Tauri** wraps the same web content into native desktop and mobile apps
+- **[Datastar](https://data-star.dev/)** provides client-side reactivity via SSE — no client-side framework needed
+- **[Ty](https://gersak.github.io/ty/)** web components (`@gersak/ty`) provide the UI layer — framework-agnostic, works everywhere
+- **[Tauri](https://tauri.app/)** wraps the same web content into native desktop and mobile apps
 - **SQLite** stores data locally (shared `pocketledger.db` at repo root)
 
 There is no separate API layer. The server renders HTML fragments and pushes them to the client over Server-Sent Events. Datastar morphs the DOM. The entire frontend is server-driven.
